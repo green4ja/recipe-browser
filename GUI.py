@@ -39,13 +39,26 @@ class ScrollableIngredientChecklist(QListWidget):
 
 class ScrollableRecipeList(QListWidget):
     def __init__(self):
-        pass
+        super().__init__()  # Call parent's __init__ (QListWidget)
+        self.FileManager = FileManager()
+        self.complete_recipe_list_widget = QListWidget(self)
+        self.actual_complete_recipe_list = (
+            self.FileManager.return_all_complete_recipes()
+        )
+        for recipe in self.actual_complete_recipe_list:
+            item = QListWidgetItem(
+                recipe.get("name")
+            )  # creates new list widget item with text set to current recipe name
+            self.complete_recipe_list_widget.addItem(
+                item
+            )  # adds the configured widget item to complete_recipe_list_widget
 
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()  # Call parent's __init__ (QMainWindow)
         self.ScrollableIngredientChecklist = ScrollableIngredientChecklist()
+        self.ScrollableRecipeList = ScrollableRecipeList()
         self.setWindowTitle("recipe-browser")  # set the window title
         self.setGeometry(
             480, 270, 960, 540
@@ -61,11 +74,14 @@ class MainWindow(QMainWindow):
         scrollable_ingredient_checklist = (
             self.ScrollableIngredientChecklist.ingredient_list_widget
         )
+        scrollable_recipe_list = self.ScrollableRecipeList.complete_recipe_list_widget
         scrollable_ingredient_checklist.setFixedSize(290, 480)  # width, height
+        scrollable_recipe_list.setFixedSize(290, 480)  # width, height
 
         # Grid Layout
         grid = QGridLayout()
         grid.addWidget(scrollable_ingredient_checklist, 0, 0)  # widget, row, col
+        grid.addWidget(scrollable_recipe_list, 0, 1)  # widget, row, col
 
         central_widget.setLayout(grid)
 
