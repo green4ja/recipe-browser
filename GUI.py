@@ -12,7 +12,11 @@ from PyQt5.QtWidgets import (
     QCheckBox,
 )
 from PyQt5.QtGui import QIcon, QFont  # QIcon used for window icon, QFont used for fonts
-from PyQt5.QtCore import Qt  # Qt used for alignments
+from PyQt5.QtCore import (
+    Qt,
+    QUrl,
+)  # Qt used for alignments, QUrl used for embedded youtube player
+from PyQt5.QtWebEngineWidgets import QWebEngineView
 from FileManager import FileManager
 
 
@@ -54,11 +58,34 @@ class ScrollableRecipeList(QListWidget):
             )  # adds the configured widget item to complete_recipe_list_widget
 
 
+class EmbeddedYoutubePlayer(QWidget):
+    def __init__(self):
+        super().__init__()  # Call parent's __init__ (QWidget)
+        self.web_viewer = QWebEngineView()
+        self.set_youtube_video("https://www.youtube.com/watch?v=w6TS5J8YRA4") # TODO: video for testing change later
+
+    def set_youtube_video(self, video_url):
+        """
+        Converts standard YouTube URL from theMealDB into an embed URL and then loads it into the embedded youtube player.
+        """
+        if "watch?v" in video_url:
+            video_id = video_url.split("watch?v=")[1].split("&")[
+                0
+            ]  # extracts the video id
+            embed_url = f"https://www.youtube.com/embed/{video_id}"
+            print(embed_url)
+        else:
+            embed_url = video_url
+
+        self.web_viewer.setUrl(QUrl(embed_url))
+
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()  # Call parent's __init__ (QMainWindow)
         self.ScrollableIngredientChecklist = ScrollableIngredientChecklist()
         self.ScrollableRecipeList = ScrollableRecipeList()
+        self.EmbeddedYoutubePlayer = EmbeddedYoutubePlayer()
         self.setWindowTitle("recipe-browser")  # set the window title
         self.setGeometry(
             480, 270, 960, 540
@@ -75,6 +102,7 @@ class MainWindow(QMainWindow):
             self.ScrollableIngredientChecklist.ingredient_list_widget
         )
         scrollable_recipe_list = self.ScrollableRecipeList.complete_recipe_list_widget
+        embedded_youtube_player = self.EmbeddedYoutubePlayer.web_viewer
         scrollable_ingredient_checklist.setFixedSize(290, 480)  # width, height
         scrollable_recipe_list.setFixedSize(290, 480)  # width, height
 
@@ -82,6 +110,7 @@ class MainWindow(QMainWindow):
         grid = QGridLayout()
         grid.addWidget(scrollable_ingredient_checklist, 0, 0)  # widget, row, col
         grid.addWidget(scrollable_recipe_list, 0, 1)  # widget, row, col
+        grid.addWidget(embedded_youtube_player, 0, 2)
 
         central_widget.setLayout(grid)
 
