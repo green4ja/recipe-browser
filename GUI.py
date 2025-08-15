@@ -21,11 +21,12 @@ from FileManager import FileManager
 
 
 class ScrollableIngredientChecklist(QListWidget):
-    def __init__(self):
+    def __init__(self, file_manager):
         super().__init__()  # Call parent's __init__ (QListWidget)
-        self.FileManager = FileManager()
-        self.ingredient_list_widget = QListWidget(self)
-        self.actual_ingredient_list = self.FileManager.return_all_possible_ingredients()
+        self.file_manager = file_manager
+        self.actual_ingredient_list = (
+            self.file_manager.return_all_possible_ingredients()
+        )
         for ingredient in self.actual_ingredient_list:
             item = QListWidgetItem(
                 ingredient
@@ -36,33 +37,30 @@ class ScrollableIngredientChecklist(QListWidget):
             item.setCheckState(
                 Qt.Checked
             )  # sets initial state of checkbox to "unchecked"
-            self.ingredient_list_widget.addItem(
-                item
-            )  # adds the configured widget item to ingredient_list_widget
+            self.addItem(item)  # adds the configured widget item to self
 
 
 class ScrollableRecipeList(QListWidget):
-    def __init__(self):
+    def __init__(self, file_manager):
         super().__init__()  # Call parent's __init__ (QListWidget)
-        self.FileManager = FileManager()
-        self.complete_recipe_list_widget = QListWidget(self)
+        self.file_manager = file_manager
         self.actual_complete_recipe_list = (
-            self.FileManager.return_all_complete_recipes()
+            self.file_manager.return_all_complete_recipes()
         )
         for recipe in self.actual_complete_recipe_list:
             item = QListWidgetItem(
                 recipe.get("name")
             )  # creates new list widget item with text set to current recipe name
-            self.complete_recipe_list_widget.addItem(
-                item
-            )  # adds the configured widget item to complete_recipe_list_widget
+            self.addItem(item)  # adds the configured widget item to self
 
 
 class EmbeddedYoutubePlayer(QWidget):
     def __init__(self):
         super().__init__()  # Call parent's __init__ (QWidget)
         self.web_viewer = QWebEngineView()
-        self.set_youtube_video("https://www.youtube.com/watch?v=w6TS5J8YRA4") # TODO: video for testing change later
+        self.set_youtube_video(
+            "https://www.youtube.com/watch?v=w6TS5J8YRA4"
+        )  # TODO: video for testing change later
 
     def set_youtube_video(self, video_url):
         """
@@ -73,19 +71,26 @@ class EmbeddedYoutubePlayer(QWidget):
                 0
             ]  # extracts the video id
             embed_url = f"https://www.youtube.com/embed/{video_id}"
-            print(embed_url)
         else:
             embed_url = video_url
 
         self.web_viewer.setUrl(QUrl(embed_url))
 
 
+class InstructionBox(QWidget):
+    def __init__(self):
+        super().__init__()  # Call parent's __init__ (QWidget)
+
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()  # Call parent's __init__ (QMainWindow)
-        self.ScrollableIngredientChecklist = ScrollableIngredientChecklist()
-        self.ScrollableRecipeList = ScrollableRecipeList()
-        self.EmbeddedYoutubePlayer = EmbeddedYoutubePlayer()
+        self.file_manager = FileManager()
+        self.scrollable_ingredient_checklist = ScrollableIngredientChecklist(
+            self.file_manager
+        )
+        self.scrollable_recipe_list = ScrollableRecipeList(self.file_manager)
+        self.embedded_youtube_player = EmbeddedYoutubePlayer()
         self.setWindowTitle("recipe-browser")  # set the window title
         self.setGeometry(
             480, 270, 960, 540
@@ -98,19 +103,14 @@ class MainWindow(QMainWindow):
     def initUI(self):
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
-        scrollable_ingredient_checklist = (
-            self.ScrollableIngredientChecklist.ingredient_list_widget
-        )
-        scrollable_recipe_list = self.ScrollableRecipeList.complete_recipe_list_widget
-        embedded_youtube_player = self.EmbeddedYoutubePlayer.web_viewer
-        scrollable_ingredient_checklist.setFixedSize(290, 480)  # width, height
-        scrollable_recipe_list.setFixedSize(290, 480)  # width, height
+        self.scrollable_ingredient_checklist.setFixedSize(290, 480)  # width, height
+        self.scrollable_recipe_list.setFixedSize(290, 480)  # width, height
 
         # Grid Layout
         grid = QGridLayout()
-        grid.addWidget(scrollable_ingredient_checklist, 0, 0)  # widget, row, col
-        grid.addWidget(scrollable_recipe_list, 0, 1)  # widget, row, col
-        grid.addWidget(embedded_youtube_player, 0, 2)
+        grid.addWidget(self.scrollable_ingredient_checklist, 0, 0)  # widget, row, col
+        grid.addWidget(self.scrollable_recipe_list, 0, 1)  # widget, row, col
+        grid.addWidget(self.embedded_youtube_player.web_viewer, 0, 2)
 
         central_widget.setLayout(grid)
 
